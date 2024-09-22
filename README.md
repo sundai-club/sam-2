@@ -2,7 +2,7 @@
 
 ## Goal: Instance segmentation using SAM2 
 
-# Project Plan
+## Project Plan
 1. Create webpage for users to upload a video
    DONE: (local host)
 2. Training - users point and click on objects of interest to identify the segments for processing, supplemented by text interface to say what user is wanting to highlight
