@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1 class="mb-4">Video Editor</h1>
+<div class="video-container">
+    <video class="img-fluid" controls>
+        <source src="{{ video_url }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // You can add any additional JavaScript for video editing functionality here
+</script>
+{% endblock %}
