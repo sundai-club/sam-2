@@ -1,5 +1,5 @@
-# SAM2-sundai Image processing hack 
-![Alt](/sc.jpg "Title")
+# ![Alt](/sc.jpg "Title") SAM2-sundai Image processing hack 
+
 
 ## Goal: Instance segmentation using SAM2 
 
