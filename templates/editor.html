@@ -14,6 +14,14 @@
     <button id="next-frame" class="btn btn-primary">Next</button>
 </div>
 
+<div class="labels-container mt-3">
+    <h3>Labels</h3>
+    <ul id="labels-list" class="list-group">
+        <!-- Labels will be dynamically added here -->
+    </ul>
+    <button id="add-label" class="btn btn-success mt-2">Add Label</button>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -23,12 +31,14 @@
         let currentIndex = 1;
         const totalFrames = 150;
         let clicks = [];
+        let labelCount = 0;
 
         function addClick(x, y, frameIndex) {
             clicks.push({x: x, y: y, frame: frameIndex});
             console.log(`Click added at (${x}, ${y}) on frame ${frameIndex}. Total clicks: ${clicks.length}`);
             renderClicks();
         }
+
         function removeClick(x, y, frameIndex) {
             const tolerance = 10; // 10 pixels tolerance
             let closestClick = null;
@@ -113,6 +123,33 @@
                 showFrame(currentIndex);
             }
         });
+
+        // Label management
+        const labelColors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFDFBA'];
+        let colorIndex = 0;
+
+        function addLabel() {
+            labelCount++;
+            const labelId = `label-${labelCount}`;
+            const backgroundColor = labelColors[colorIndex];
+            colorIndex = (colorIndex + 1) % labelColors.length;
+            const labelHtml = `
+                <li id="${labelId}" class="list-group-item d-flex justify-content-between align-items-center" style="background-color: ${backgroundColor}">
+                    <input type="text" class="form-control mr-2" value="Object ${labelCount}">
+                    <button class="btn btn-danger btn-sm delete-label">Delete</button>
+                </li>
+            `;
+            $('#labels-list').append(labelHtml);
+        }
+
+        $('#add-label').click(addLabel);
+
+        $(document).on('click', '.delete-label', function() {
+            $(this).closest('li').remove();
+        });
+
+        // Add initial label
+        addLabel();
     });
 </script>
 {% endblock %}
