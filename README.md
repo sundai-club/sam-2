@@ -1,4 +1,4 @@
-# sam2-sundai Image processing hack 
+# SAM2-sundai Image processing hack 
 
 ## Goal: Instance segmentation using SAM2 
 
