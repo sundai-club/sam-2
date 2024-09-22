@@ -12,7 +12,9 @@ if not api_key:
     raise ValueError("GRADIO_API_KEY not found in environment variables")
 
 # Create client with authentication
-client = Client("SkalskiP/florence-sam", api_key=api_key)
+# client = Client("SkalskiP/florence-sam", hf_token=api_key)
+client = Client("nathanfdunn/florence-sam-attempt2", hf_token=api_key)
+# client = Client("nathanfdunn/florence-sam-attempt2")
 
 result = client.predict(
 		video_input={"video":handle_file('https://res.cloudinary.com/hkzbfes0n/video/upload/v1727031665/uploaded_videos/aojcuh3degxpxntslds4.mp4')},
