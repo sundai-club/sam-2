@@ -4,8 +4,7 @@
 ## Goal: Instance segmentation using SAM2 
 
 ## Project Plan
-**1. Create webpage** for users to upload a video
-   DONE: (local host)
+**1. Create webpage** for users to upload a video DONE: (local host) 
 **2. Identifying segment(s) of interest** - users point and click on objects of interest to identify the segments for processing, supplemented by text interface to say what user is wanting to highlight
 **3. Apply SAM2** instance segmentation with configurable color choices for 1-2 segments
 - change color/contrast for segment only
