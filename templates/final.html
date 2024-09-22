@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Final Video</h1>
+    <div class="video-container">
+        <video id="finalVideo" controls width="100%">
+            <source src="{{ video_url }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('finalVideo');
+        video.addEventListener('error', function() {
+            console.error('Error loading video:', video.error);
+        });
+    });
+</script>
+{% endblock %}

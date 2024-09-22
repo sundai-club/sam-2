@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<div class="container" style="padding-bottom: 100px;">
 <h1 class="mb-4">Video Editor</h1>
 <div class="video-container position-relative">
     {% for frame_index in frame_numbers %}
@@ -22,8 +23,8 @@
     <button id="add-label" class="btn btn-success mt-2">Add Label</button>
 </div>
 
-<button id="submit-segmentation" class="btn btn-primary mt-3">Submit Segmentation</button>
-
+    <button id="submit-segmentation" class="btn btn-primary mt-3">Submit Segmentation</button>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -216,6 +217,8 @@
                 success: function(response) {
                     console.log('Segmentation submitted successfully:', response);
                     // Handle the response as needed
+                    // Redirect to the final video page
+                    window.location.href = '/final_video/' + '{{ video_id }}';
                 },
                 error: function(xhr, status, error) {
                     console.error('Error submitting segmentation:', error);

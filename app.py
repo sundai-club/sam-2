@@ -9,6 +9,7 @@ import replicate
 import uuid
 import ffmpeg
 import json
+import time
 
 app = Flask(__name__)
 load_dotenv()
@@ -131,7 +132,21 @@ def segment_video(video_id):
     print(f"Segmentation data saved to: {raw_file}")
     print(f"Processed data saved to: {processed_file}")
 
-    return jsonify({'message': 'Segmentation data received and saved successfully'}), 200
+    time.sleep(5)
+
+    segmented_video_url = 'https://res.cloudinary.com/hkzbfes0n/video/upload/v1727048334/uploaded_videos/hfd2vo4niac7zqehzgj7.mp4'
+    # Save the segmented video URL to a file in the working directory
+    segmented_video_url_file = os.path.join(working_dir, 'segmented_video_url.txt')
+    with open(segmented_video_url_file, 'w') as f:
+        f.write(segmented_video_url)
+
+    print(f"Segmented video URL saved to: {segmented_video_url_file}")
+
+    return jsonify({
+        'segmented_video_url': segmented_video_url
+    })
+    # return jsonify({'message': 'Segmentation data received and saved successfully'}), 200
+
 
 
 @app.route('/frame/<guid>/<int:index>')
@@ -144,6 +159,29 @@ def serve_frame(guid, index):
     else:
         return 'Frame not found', 404
 
+
+@app.route('/final_video/<video_id>')
+def final_video(video_id):
+    if not video_id:
+        return 'No video ID provided', 400
+    
+    # Get the video URL from the stored file
+    video_url_path = f'/tmp/{video_id}/video_url.txt'
+    try:
+        with open(video_url_path, 'r') as f:
+            video_url = f.read().strip()
+    except FileNotFoundError:
+        return 'Video URL not found', 404
+
+    # Get the processed segmentation data
+    processed_file = os.path.join('/tmp', video_id, 'processed.json')
+    try:
+        with open(processed_file, 'r') as f:
+            processed_data = json.load(f)
+    except FileNotFoundError:
+        return 'Processed segmentation data not found', 404
+
+    return render_template('final.html', video_id=video_id, video_url=video_url, segmentation_data=processed_data)
 
 
 @app.route('/edit_video/<video_id>')
