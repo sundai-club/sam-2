@@ -6,6 +6,7 @@ import cloudinary
 import cloudinary.uploader
 from dotenv import load_dotenv
 import replicate
+import uuid
 
 
 app = Flask(__name__)
@@ -31,6 +32,7 @@ def hello_world():
 
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
+    guid = str(uuid.uuid4())
     if 'video' not in request.files:
         raise ValueError('No file part')
     file = request.files['video']
@@ -38,12 +40,23 @@ def upload_video():
         raise ValueError('No selected file')
     if file:
         try:
+            # Create a working directory
+            working_dir = f'/tmp/{guid}/'
+            os.makedirs(working_dir, exist_ok=True)
+            
+            # Create a manifest file
+            manifest_path = os.path.join(working_dir, f'{guid}.manifest')
+            
+            
             upload_result = cloudinary.uploader.upload(file,
                                                        resource_type="video",
                                                        folder="uploaded_videos")
             logging.info(f"File uploaded to Cloudinary. URL: {upload_result['url']}")
             video_url = upload_result['url']
-            encoded_url = url_for('edit_video', video_url=video_url, _external=True)
+            with open(os.path.join(working_dir, 'video_url.txt'), 'w') as f:
+                f.write(video_url)
+            open(manifest_path, 'w').close()  # Create an empty file
+            encoded_url = url_for('edit_video', video_id=guid,)
             return redirect(encoded_url)
         except Exception as e:
             logging.exception(f"Error uploading to Cloudinary: {str(e)}")
@@ -65,10 +78,13 @@ def segment_video():
     #=> {"combined_mask":"https://replicate.delivery/pbxt/PhfVJub...
 
 
-@app.route('/edit_video/<path:video_url>')
-def edit_video(video_url):
-    if not video_url:
+@app.route('/edit_video/<video_id>')
+def edit_video(video_id):
+    if not video_id:
         return 'No video URL provided', 400
+    video_url_path = f'/tmp/{video_id}/video_url.txt'
+    with open(video_url_path, 'r') as f:
+        video_url = f.read()
     return render_template('editor.html', video_url=video_url)
 
 if __name__ == '__main__':
