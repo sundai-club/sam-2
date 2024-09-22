@@ -2,11 +2,12 @@
 
 {% block content %}
 <h1 class="mb-4">Video Editor</h1>
-<div class="video-container">
+<div class="video-container position-relative">
     {% for frame_index in frame_numbers %}
         <img hidden id="frame-{{ frame_index }}" src="{{ url_for('serve_frame', guid=video_id, index=frame_index) }}" alt="Frame {{ frame_index }}" 
         class="video-frame">
     {% endfor %}
+    <div id="click-markers"></div>
 </div>
 <div class="controls mt-3">
     <button id="prev-frame" class="btn btn-primary">Previous</button>
@@ -26,20 +27,75 @@
         function addClick(x, y, frameIndex) {
             clicks.push({x: x, y: y, frame: frameIndex});
             console.log(`Click added at (${x}, ${y}) on frame ${frameIndex}. Total clicks: ${clicks.length}`);
+            renderClicks();
+        }
+        function removeClick(x, y, frameIndex) {
+            const tolerance = 10; // 10 pixels tolerance
+            let closestClick = null;
+            let minDistance = Infinity;
+
+            clicks.forEach((click, index) => {
+                if (click.frame === frameIndex) {
+                    const distanceX = Math.abs(click.x - x);
+                    const distanceY = Math.abs(click.y - y);
+                    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+                    if (distance < minDistance && distance <= tolerance) {
+                        minDistance = distance;
+                        closestClick = index;
+                    }
+                }
+            });
+
+            if (closestClick !== null) {
+                clicks.splice(closestClick, 1);
+                console.log(`Closest click removed near (${x}, ${y}) on frame ${frameIndex}. Total clicks: ${clicks.length}`);
+                renderClicks();
+            } else {
+                console.log(`No click found near (${x}, ${y}) on frame ${frameIndex} within tolerance.`);
+            }
         }
 
-        $('.video-frame').click(function(event) {
+        function renderClicks() {
+            $('#click-markers').empty();
+            clicks.forEach((click, index) => {
+                if (click.frame === currentIndex) {
+                    const marker = $('<span>')
+                        .addClass('click-marker')
+                        .css({
+                            position: 'absolute',
+                            left: click.x + 'px',
+                            top: click.y + 'px',
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            backgroundColor: 'red',
+                            pointerEvents: 'none'
+                        });
+                    $('#click-markers').append(marker);
+                }
+            });
+        }
+
+        $('.video-frame').on('click contextmenu', function(event) {
+            event.preventDefault();
             const rect = event.target.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             const frameIndex = parseInt($(this).attr('id').split('-')[1]);
-            addClick(x, y, frameIndex);
+            
+            if (event.type === 'contextmenu') {
+                removeClick(x, y, frameIndex);
+            } else {
+                addClick(x, y, frameIndex);
+            }
         });
+
         function showFrame(index) {
             console.log(`Showing frame ${index}`);
             $('.video-frame').removeAttr('hidden');
             $('.video-frame').not(`#frame-${index}`).attr('hidden', 'hidden');
             $(`#frame-${index}`).show();
+            renderClicks();
         }
 
         showFrame(currentIndex);
