@@ -1,23 +1,20 @@
-from gradio_client import Client, handle_file
+import replicate
 import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
 
-# Get API key from environment variable
-api_key = os.getenv('GRADIO_API_KEY')
 
-if not api_key:
-    raise ValueError("GRADIO_API_KEY not found in environment variables")
-
-# Create client with authentication
-# client = Client("SkalskiP/florence-sam")
-client = Client("nathanfdunn/florence-sam-attempt3", hf_token=api_key)
-# https://huggingface.co/spaces/nathanfdunn/florence-sam-attempt2
-result = client.predict(
-		video_input={"video":handle_file('https://res.cloudinary.com/hkzbfes0n/video/upload/v1727031665/uploaded_videos/aojcuh3degxpxntslds4.mp4')},
-		text_input="Bikes",
-		api_name="/process_video"
+input = {
+    "mask_type": "highlighted",
+    "video_fps": 25,
+    "input_video": "https://res.cloudinary.com/hkzbfes0n/video/upload/v1727031665/uploaded_videos/aojcuh3degxpxntslds4.mp4",
+    "click_frames": "1",
+    "output_video": True,
+    "click_object_ids": "bee_1,bee_2,bee_3,bee_4,bee_5,bee_6,bee_7,bee_8",
+    "click_coordinates": "[391,239],[178,320],[334,391],[185,446],[100,433],[461,499],[11,395],[9,461]"
+}
+output = replicate.run(
+    "meta/sam-2-video:33432afdfc06a10da6b4018932893d39b0159f838b6d11dd1236dff85cc5ec1d",
+    input=input
 )
-print(result)
+print(output)
+    #=> "https://replicate.delivery/pbxt/iGyFurounuZkAFqPL7Rjq5bzL9WdE7AhUfdXmKlvEnroHTpJA/output_video.mp4"
