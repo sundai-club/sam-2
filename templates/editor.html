@@ -3,15 +3,47 @@
 {% block content %}
 <h1 class="mb-4">Video Editor</h1>
 <div class="video-container">
-    <video class="img-fluid" controls>
-        <source src="{{ video_url }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+    {% for frame_index in frame_numbers %}
+        <img hidden id="frame-{{ frame_index }}" src="{{ url_for('serve_frame', guid=video_id, index=frame_index) }}" alt="Frame {{ frame_index }}" 
+        class="video-frame">
+    {% endfor %}
 </div>
+<div class="controls mt-3">
+    <button id="prev-frame" class="btn btn-primary">Previous</button>
+    <button id="next-frame" class="btn btn-primary">Next</button>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // You can add any additional JavaScript for video editing functionality here
+    $(document).ready(function() {
+        let currentIndex = 1;
+        const totalFrames = 150;
+
+        function showFrame(index) {
+            console.log(`Showing frame ${index}`);
+            $('.video-frame').removeAttr('hidden');
+            $('.video-frame').not(`#frame-${index}`).attr('hidden', 'hidden');
+            $(`#frame-${index}`).show();
+        }
+
+        showFrame(currentIndex);
+
+        $('#prev-frame').click(function() {
+            if (currentIndex > 1) {
+                currentIndex--;
+                showFrame(currentIndex);
+            }
+        });
+
+        $('#next-frame').click(function() {
+            if (currentIndex < totalFrames) {
+                currentIndex++;
+                showFrame(currentIndex);
+            }
+        });
+    });
 </script>
 {% endblock %}

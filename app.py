@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
 from werkzeug.utils import secure_filename
 import os
 import logging
@@ -7,7 +7,7 @@ import cloudinary.uploader
 from dotenv import load_dotenv
 import replicate
 import uuid
-
+import ffmpeg
 
 app = Flask(__name__)
 load_dotenv()
@@ -61,7 +61,21 @@ def upload_video():
                 f.write(video_url)
             open(manifest_path, 'w').close()  # Create an empty file
             encoded_url = url_for('edit_video', video_id=guid,)
+            # Break the video into individual frames using ffmpeg-python
+            frames_dir = os.path.join(working_dir, 'frames')
+            os.makedirs(frames_dir, exist_ok=True)
             
+            (
+                ffmpeg
+                .input(file_path)
+                .trim(start=0, duration=5)  # Trim to first 5 seconds
+                .filter('fps', fps=30)  # Extract 30 frames per second
+                .output(os.path.join(frames_dir, 'frame_%04d.png'))
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=True)
+            )
+            logging.info(f"Video successfully broken into frames in {frames_dir}")
+
             return redirect(encoded_url)
         except Exception as e:
             logging.exception(f"Error uploading to Cloudinary: {str(e)}")
@@ -83,14 +97,42 @@ def segment_video():
     #=> {"combined_mask":"https://replicate.delivery/pbxt/PhfVJub...
 
 
+@app.route('/frame/<guid>/<int:index>')
+def serve_frame(guid, index):
+    frames_dir = os.path.join('/tmp', guid, 'frames')
+    frame_path = os.path.join(frames_dir, f'frame_{index:04d}.png')
+    
+    if os.path.exists(frame_path):
+        return send_file(frame_path, mimetype='image/png')
+    else:
+        return 'Frame not found', 404
+
+
+
 @app.route('/edit_video/<video_id>')
 def edit_video(video_id):
     if not video_id:
         return 'No video URL provided', 400
+    
+    # Get the frames directory for this video
+    frames_dir = os.path.join('/tmp', video_id, 'frames')
+    
+    # List all frame files in the directory
+    frame_files = sorted([f for f in os.listdir(frames_dir) if f.startswith('frame_') and f.endswith('.png')])
+    # Calculate the number of frames
+    num_frames = len(frame_files)
+    
+    # Log the number of frames for debugging
+    logging.info(f"Number of frames for video {video_id}: {num_frames}")
+    # Get the total number of frames
+    total_frames = len(frame_files)
+    
+    if total_frames == 0:
+        return 'No frames found for this video', 404
     video_url_path = f'/tmp/{video_id}/video_url.txt'
     with open(video_url_path, 'r') as f:
         video_url = f.read()
-    return render_template('editor.html', video_url=video_url)
+    return render_template('editor.html', video_id=video_id, video_url=video_url, frame_numbers=range(1,num_frames))
 
 if __name__ == '__main__':
     app.run(debug=True)
