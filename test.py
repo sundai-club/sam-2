@@ -12,8 +12,8 @@ if not api_key:
     raise ValueError("GRADIO_API_KEY not found in environment variables")
 
 # Create client with authentication
-# client = Client("SkalskiP/florence-sam", hf_token=api_key)
-client = Client("nathanfdunn/florence-sam-attempt2", hf_token=api_key)
+client = Client("SkalskiP/florence-sam")
+# client = Client("nathanfdunn/florence-sam-attempt2", hf_token=api_key)
 # client = Client("nathanfdunn/florence-sam-attempt2")
 
 result = client.predict(
