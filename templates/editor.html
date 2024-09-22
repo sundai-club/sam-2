@@ -22,6 +22,8 @@
     <button id="add-label" class="btn btn-success mt-2">Add Label</button>
 </div>
 
+<button id="submit-segmentation" class="btn btn-primary mt-3">Submit Segmentation</button>
+
 {% endblock %}
 
 {% block scripts %}
@@ -191,6 +193,36 @@
 
         // Add initial label
         addLabel();
+
+        // Submit segmentation
+        $('#submit-segmentation').click(function() {
+            const objects = {};
+            $('#labels-list li').each(function() {
+                const labelId = $(this).attr('id');
+                const labelName = $(this).find('input').val();
+                objects[labelId] = labelName;
+            });
+
+            const data = {
+                clicks: clicks,
+                objects: objects
+            };
+
+            $.ajax({
+                url: '/segment_video/' + '{{ video_id }}',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    console.log('Segmentation submitted successfully:', response);
+                    // Handle the response as needed
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error submitting segmentation:', error);
+                    // Handle the error as needed
+                }
+            });
+        });
     });
 </script>
 {% endblock %}

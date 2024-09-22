@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import replicate
 import uuid
 import ffmpeg
+import json
 
 app = Flask(__name__)
 load_dotenv()
@@ -81,20 +82,56 @@ def upload_video():
             logging.exception(f"Error uploading to Cloudinary: {str(e)}")
             return 'Error uploading file'
 
-@app.route('/segment_video', methods=['POST'])
-def segment_video():
-    video_url = request.json.get('video_url')
+@app.route('/segment_video/<video_id>', methods=['POST'])
+def segment_video(video_id):
+    data = request.json
+    
+    if not video_id:
+        return jsonify({'error': 'No GUID provided'}), 400
 
-    input = {
-        "image": "https://replicate.delivery/pbxt/LMbGi83qiV3QXR9fqDIzTl0P23ZWU560z1nVDtgl0paCcyYs/cars.jpg"
+    working_dir = f'/tmp/{video_id}/'
+    
+    if not os.path.exists(working_dir):
+        return jsonify({'error': 'Invalid GUID'}), 400
+
+
+    # Process the segmentation data
+    clicks = data['clicks']
+    objects = data['objects']
+
+    # Prepare the click coordinates
+    click_coords = ','.join([f"[{round(click['x'])},{round(click['y'])}]" for click in clicks])
+
+    # Prepare the click frames
+    click_frames = ','.join([str(click['frame']) for click in clicks])
+
+    # Prepare the click object IDs
+    click_object_ids = ','.join([objects[click['labelId']] for click in clicks])
+
+    # Log the prepared data for debugging
+    logging.info(f"Click coordinates: {click_coords}")
+    logging.info(f"Click frames: {click_frames}")
+    logging.info(f"Click object IDs: {click_object_ids}")
+
+    # Save the raw segmentation data
+    raw_file = os.path.join(working_dir, 'raw.json')
+    with open(raw_file, 'w') as f:
+        json.dump(data, f, indent=2)
+
+    # Save the processed segmentation data
+    processed_data = {
+        'click_coordinates': click_coords,
+        'click_frames': click_frames,
+        'click_object_ids': click_object_ids
     }
+    processed_file = os.path.join(working_dir, 'processed.json')
+    with open(processed_file, 'w') as f:
+        json.dump(processed_data, f, indent=2)
 
-    output = replicate.run(
-        "meta/sam-2:fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83",
-        input=input
-    )
-    print(output)
-    #=> {"combined_mask":"https://replicate.delivery/pbxt/PhfVJub...
+    print(f"Segmentation data saved to: {raw_file}")
+    print(f"Processed data saved to: {processed_file}")
+
+    return jsonify({'message': 'Segmentation data received and saved successfully'}), 200
 
 
 @app.route('/frame/<guid>/<int:index>')
