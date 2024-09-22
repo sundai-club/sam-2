@@ -14,14 +14,6 @@
     <button id="next-frame" class="btn btn-primary">Next</button>
 </div>
 
-<div class="object-list mt-4">
-    <h2>Objects</h2>
-    <ul id="object-list" class="list-group">
-        <!-- Remove the hardcoded first object -->
-    </ul>
-    <button id="add-object" class="btn btn-success mt-2">Add Object</button>
-</div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -31,15 +23,12 @@
         let currentIndex = 1;
         const totalFrames = 150;
         let clicks = [];
-        let objectCount = 0;
-        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
 
         function addClick(x, y, frameIndex) {
             clicks.push({x: x, y: y, frame: frameIndex});
             console.log(`Click added at (${x}, ${y}) on frame ${frameIndex}. Total clicks: ${clicks.length}`);
             renderClicks();
         }
-
         function removeClick(x, y, frameIndex) {
             const tolerance = 10; // 10 pixels tolerance
             let closestClick = null;
@@ -72,10 +61,15 @@
                 if (click.frame === currentIndex) {
                     const marker = $('<span>')
                         .addClass('click-marker')
-                        // .addClass(`color-${colors[index % colors.length]}`)
                         .css({
+                            position: 'absolute',
                             left: click.x + 'px',
-                            top: click.y + 'px'
+                            top: click.y + 'px',
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            backgroundColor: 'red',
+                            pointerEvents: 'none'
                         });
                     $('#click-markers').append(marker);
                 }
@@ -119,59 +113,6 @@
                 showFrame(currentIndex);
             }
         });
-
-        // Object list functionality
-        $('#add-object').click(function() {
-            objectCount++;
-            const color = colors[(objectCount - 1) % colors.length];
-            const newObject = $('<li>')
-                .addClass('list-group-item d-flex justify-content-between align-items-center')
-                .addClass(`bg-${color}-light`)
-                .html(`
-                    <span class="object-name" contenteditable="true" data-color="${color}">Object ${objectCount}</span>
-                    <button class="btn btn-danger btn-sm delete-object">Delete</button>
-                `);
-            $('#object-list').append(newObject);
-        });
-
-        // Delete object
-        $('#object-list').on('click', '.delete-object', function() {
-            $(this).closest('li').remove();
-        });
-
-        // Make object name editable
-        $('#object-list').on('blur', '.object-name', function() {
-            if ($(this).text().trim() === '') {
-                $(this).text('Unnamed Object');
-            }
-        });
-
-        // Add the first object programmatically
-        $('#add-object').click();
     });
 </script>
-{% endblock %}
-
-{% block styles %}
-<style>
-    .click-marker {
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        pointer-events: none;
-    }
-    /* .color-red { background-color: red; }
-    .color-blue { background-color: blue; }
-    .color-green { background-color: green; }
-    .color-yellow { background-color: yellow; }
-    .color-purple { background-color: purple; }
-    .color-orange { background-color: orange; }
-    .bg-red-light { background-color: rgba(255, 0, 0, 0.1); }
-    .bg-blue-light { background-color: rgba(0, 0, 255, 0.1); }
-    .bg-green-light { background-color: rgba(0, 255, 0, 0.1); }
-    .bg-yellow-light { background-color: rgba(255, 255, 0, 0.1); }
-    .bg-purple-light { background-color: rgba(128, 0, 128, 0.1); }
-    .bg-orange-light { background-color: rgba(255, 165, 0, 0.1); } */
-</style>
 {% endblock %}
