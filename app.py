@@ -132,7 +132,7 @@ def segment_video(video_id):
     print(f"Segmentation data saved to: {raw_file}")
     print(f"Processed data saved to: {processed_file}")
 
-    time.sleep(5)
+    time.sleep(10)
 
     segmented_video_url = 'https://res.cloudinary.com/hkzbfes0n/video/upload/v1727048334/uploaded_videos/hfd2vo4niac7zqehzgj7.mp4'
     # Save the segmented video URL to a file in the working directory
