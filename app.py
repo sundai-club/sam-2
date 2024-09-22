@@ -33,6 +33,7 @@ def hello_world():
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
     guid = str(uuid.uuid4())
+    logging.info(f"Generated GUID for video upload: {guid}")
     if 'video' not in request.files:
         raise ValueError('No file part')
     file = request.files['video']
@@ -43,11 +44,14 @@ def upload_video():
             # Create a working directory
             working_dir = f'/tmp/{guid}/'
             os.makedirs(working_dir, exist_ok=True)
-            
+            # Save the uploaded file
+            file_path = os.path.join(working_dir, 'video.mp4')
+            file.save(file_path)
+            logging.info(f"File saved locally at: {file_path}")
             # Create a manifest file
             manifest_path = os.path.join(working_dir, f'{guid}.manifest')
             
-            
+            file.seek(0)
             upload_result = cloudinary.uploader.upload(file,
                                                        resource_type="video",
                                                        folder="uploaded_videos")
@@ -57,6 +61,7 @@ def upload_video():
                 f.write(video_url)
             open(manifest_path, 'w').close()  # Create an empty file
             encoded_url = url_for('edit_video', video_id=guid,)
+            
             return redirect(encoded_url)
         except Exception as e:
             logging.exception(f"Error uploading to Cloudinary: {str(e)}")
