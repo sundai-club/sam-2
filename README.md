@@ -1,9 +1,5 @@
 # SAM2-sundai Image processing hack 
-
-Logo: ![Alt](/sundaiClubLogo.svg "Title")
-
-
-Logo: ![Alt](/sc.jpg "Title")
+![Alt](/sc.jpg "Title")
 
 ## Goal: Instance segmentation using SAM2 
 
