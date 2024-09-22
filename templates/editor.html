@@ -21,7 +21,20 @@
     $(document).ready(function() {
         let currentIndex = 1;
         const totalFrames = 150;
+        let clicks = [];
 
+        function addClick(x, y, frameIndex) {
+            clicks.push({x: x, y: y, frame: frameIndex});
+            console.log(`Click added at (${x}, ${y}) on frame ${frameIndex}. Total clicks: ${clicks.length}`);
+        }
+
+        $('.video-frame').click(function(event) {
+            const rect = event.target.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const frameIndex = parseInt($(this).attr('id').split('-')[1]);
+            addClick(x, y, frameIndex);
+        });
         function showFrame(index) {
             console.log(`Showing frame ${index}`);
             $('.video-frame').removeAttr('hidden');
