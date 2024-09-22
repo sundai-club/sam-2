@@ -26,16 +26,26 @@
 
 {% block scripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+    .selected-label {
+        border: 2px solid #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+</style>
 <script>
     $(document).ready(function() {
         let currentIndex = 1;
         const totalFrames = 150;
         let clicks = [];
         let labelCount = 0;
+        let selectedLabelId = null;
 
-        function addClick(x, y, frameIndex) {
-            clicks.push({x: x, y: y, frame: frameIndex});
-            console.log(`Click added at (${x}, ${y}) on frame ${frameIndex}. Total clicks: ${clicks.length}`);
+        function addClick(x, y, frameIndex, labelId) {
+            const labelElement = $(`#${labelId}`);
+            const colorIndex = labelElement.data('color-index');
+            const clickColor = clickColors[colorIndex];
+            clicks.push({x: x, y: y, frame: frameIndex, labelId: labelId, color: clickColor});
+            console.log(`Click added at (${x}, ${y}) on frame ${frameIndex} for label ${labelId}. Total clicks: ${clicks.length}`);
             renderClicks();
         }
 
@@ -78,7 +88,7 @@
                             width: '10px',
                             height: '10px',
                             borderRadius: '50%',
-                            backgroundColor: 'red',
+                            backgroundColor: click.color,
                             pointerEvents: 'none'
                         });
                     $('#click-markers').append(marker);
@@ -95,8 +105,10 @@
             
             if (event.type === 'contextmenu') {
                 removeClick(x, y, frameIndex);
+            } else if (selectedLabelId) {
+                addClick(x, y, frameIndex, selectedLabelId);
             } else {
-                addClick(x, y, frameIndex);
+                console.log('Please select a label before adding a click.');
             }
         });
 
@@ -123,29 +135,58 @@
                 showFrame(currentIndex);
             }
         });
+        const clickColors = ['#FF6B8A', '#6BFF99', '#6BB5FF', '#FFFF6B', '#FFB06B'];
 
         // Label management
         const labelColors = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFDFBA'];
+
         let colorIndex = 0;
 
         function addLabel() {
             labelCount++;
             const labelId = `label-${labelCount}`;
             const backgroundColor = labelColors[colorIndex];
-            colorIndex = (colorIndex + 1) % labelColors.length;
             const labelHtml = `
-                <li id="${labelId}" class="list-group-item d-flex justify-content-between align-items-center" style="background-color: ${backgroundColor}">
+                <li data-color-index="${colorIndex}" id="${labelId}" class="list-group-item d-flex justify-content-between align-items-center" style="background-color: ${backgroundColor}">
                     <input type="text" class="form-control mr-2" value="Object ${labelCount}">
                     <button class="btn btn-danger btn-sm delete-label">Delete</button>
                 </li>
             `;
             $('#labels-list').append(labelHtml);
+            selectLabel(labelId);
+            colorIndex = (colorIndex + 1) % labelColors.length;
+        }
+
+        function selectLabel(labelId) {
+            if (selectedLabelId) {
+                $(`#${selectedLabelId}`).removeClass('selected-label');
+            }
+            selectedLabelId = labelId;
+            $(`#${selectedLabelId}`).addClass('selected-label');
         }
 
         $('#add-label').click(addLabel);
 
-        $(document).on('click', '.delete-label', function() {
-            $(this).closest('li').remove();
+        $(document).on('click', '.delete-label', function(event) {
+            event.stopPropagation();
+            const labelToDelete = $(this).closest('li');
+            const labelId = labelToDelete.attr('id');
+            labelToDelete.remove();
+            // Remove all clicks associated with this label
+            clicks = clicks.filter(click => click.labelId !== labelId);
+            renderClicks();
+            if (labelId === selectedLabelId) {
+                const lastLabel = $('#labels-list li:last');
+                if (lastLabel.length) {
+                    selectLabel(lastLabel.attr('id'));
+                } else {
+                    selectedLabelId = null;
+                }
+            }
+        });
+
+        $(document).on('click', '#labels-list li', function() {
+            selectLabel($(this).attr('id'));
         });
 
         // Add initial label
